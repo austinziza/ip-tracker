@@ -12,7 +12,7 @@
 
     <div  class="row pt-5 ipDetails">
       <div class= "col-xl-6 offset-xl-3 col-lg-6 offset-lg-3 col-md-6 offset-md-3 col-sm-12 position-relative">
-        <div style="background-color: white">
+        <div style="background-color: white; border-radius: 10px">
           <div class="row pt-5 pb-5">
             <div class="col-lg-3 col-md-12 col-sm-12">
               <span class="title text-start">IP ADDRESS</span><br/>

@@ -10,15 +10,90 @@
 
       <link rel="stylesheet" href="<%= BASE_URL %>assets/font-awesome-4.7.0/css/font-awesome.min.css"/>
 
+      <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A==" crossorigin="" />
+      <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js" integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA==" crossorigin=""></script>
+
   </head>
   <body>
     <noscript>
       <strong>We're sorry but <%= htmlWebpackPlugin.options.title %> doesn't work properly without JavaScript enabled. Please enable it to continue.</strong>
     </noscript>
     <div id="app"></div>
+    <div id="map" style=" width: 100%; height: 400px;"></div>
     <!-- built files will be auto injected -->
 
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+    <script type="text/javascript" src="<%= BASE_URL %>assets/js/stateData.js"></script>
+  <script>
+      function getColor(d) {
+          return d > 1000 ? '#800026' :
+              d > 500  ? '#BD0026' :
+                  d > 200  ? '#E31A1C' :
+                      d > 100  ? '#FC4E2A' :
+                          d > 50   ? '#FD8D3C' :
+                              d > 20   ? '#FEB24C' :
+                                  d > 10   ? '#FED976' :
+                                      '#FFEDA0';
+      }
+
+      function style(feature) {
+          return {
+              fillColor: getColor(feature.properties.density),
+              weight: 2,
+              opacity: 1,
+              color: 'white',
+              dashArray: '3',
+              fillOpacity: 0.7
+          };
+      }
+
+      function highlightFeature(e) {
+          var layer = e.target;
+
+          layer.setStyle({
+              weight: 5,
+              color: '#666',
+              dashArray: '',
+              fillOpacity: 0.7
+          });
+
+          if (!L.Browser.ie && !L.Browser.opera && !L.Browser.edge) {
+              layer.bringToFront();
+          }
+      }
+
+      function resetHighlight(e) {
+          geojson.resetStyle(e.target);
+      }
+
+      function zoomToFeature(e) {
+          map.fitBounds(e.target.getBounds());
+      }
+
+      function onEachFeature(feature, layer) {
+          layer.on({
+              mouseover: highlightFeature,
+              mouseout: resetHighlight,
+              click: zoomToFeature
+          });
+      }
+
+
+      var mapboxAccessToken = process.env.VUE_APP_ACCESS_TOKEN;
+      var map = L.map('map').setView([37.8, -96], 4);
+
+      L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token=' + mapboxAccessToken, {
+          id: 'mapbox/light-v9',
+          attribution: '',
+          tileSize: 512,
+          zoomOffset: -1
+      }).addTo(map);
+
+      geojson = L.geoJson(statesData, {
+          style: style,
+          onEachFeature: onEachFeature
+      }).addTo(map);
+  </script>
   </body>
 </html>

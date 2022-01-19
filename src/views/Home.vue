@@ -56,22 +56,94 @@
         </div>
       </div>
     </div>
+
   </div>
+
+  <div id="map" style=" width: 100%; height: 400px;"></div>
 </template>
 
 <script>
+import {statesData} from "../util/statesData";
 
 export default {
   name: 'Home',
   data() {
     return {
       ip: '8.8.8.8',
+      map: null,
+      geojson: null
     }
   },
   methods: {
+     getColor(d) {
+  return d > 1000 ? '#800026' :
+      d > 500  ? '#BD0026' :
+          d > 200  ? '#E31A1C' :
+              d > 100  ? '#FC4E2A' :
+                  d > 50   ? '#FD8D3C' :
+                      d > 20   ? '#FEB24C' :
+                          d > 10   ? '#FED976' :
+                              '#FFEDA0';
+},
+
+ style(feature) {
+  return {
+    fillColor: this.getColor(feature.properties.density),
+    weight: 2,
+    opacity: 1,
+    color: 'white',
+    dashArray: '3',
+    fillOpacity: 0.7
+  };
+},
+
+ highlightFeature(e) {
+  var layer = e.target;
+
+  layer.setStyle({
+    weight: 5,
+    color: '#666',
+    dashArray: '',
+    fillOpacity: 0.7
+  });
+
+  if (!window.L.Browser.ie && !window.L.Browser.opera && !window.L.Browser.edge) {
+    layer.bringToFront();
+  }
+},
+
+ resetHighlight(e) {
+  this.geojson.resetStyle(e.target);
+},
+
+    zoomToFeature(e) {
+  this.map.fitBounds(e.target.getBounds());
+},
+
+ onEachFeature(feature, layer) {
+  layer.on({
+    mouseover: this.highlightFeature,
+    mouseout: this.resetHighlight,
+    click: this.zoomToFeature
+  });
+}
 
   },
   mounted() {
+    var mapboxAccessToken = process.env.VUE_APP_ACCESS_TOKEN;
+    this.map = window.L.map('map').setView([37.8, -96], 4);
+
+    window.L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token=' + mapboxAccessToken, {
+      id: 'mapbox/light-v9',
+      attribution: '',
+      tileSize: 512,
+      zoomOffset: -1
+    }).addTo(this.map);
+
+    this.geojson = window.L.geoJson(statesData, {
+      style: this.style,
+      onEachFeature: this.onEachFeature
+    }).addTo(this.map);
   }
 
 }

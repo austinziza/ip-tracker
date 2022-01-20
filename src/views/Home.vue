@@ -59,7 +59,7 @@
 
   </div>
 
-  <div id="map" style=" width: 100%; height: 400px;"></div>
+  <div id="map" style=" width: 100%; height: 800px;"></div>
 </template>
 
 <script>
@@ -71,7 +71,9 @@ export default {
     return {
       ip: '8.8.8.8',
       map: null,
-      geojson: null
+      geojson: null,
+       info : window.L.control(),
+       legend: window.L.control({position: 'bottomright'})
     }
   },
   methods: {
@@ -110,10 +112,12 @@ export default {
   if (!window.L.Browser.ie && !window.L.Browser.opera && !window.L.Browser.edge) {
     layer.bringToFront();
   }
+   this.info.update(layer.feature.properties);
 },
 
  resetHighlight(e) {
   this.geojson.resetStyle(e.target);
+   this.info.update();
 },
 
     zoomToFeature(e) {
@@ -144,12 +148,51 @@ export default {
       style: this.style,
       onEachFeature: this.onEachFeature
     }).addTo(this.map);
+
+
+
+    this.info.onAdd = function () {
+      this._div = window.L.DomUtil.create('div', 'info'); // create a div with a class "info"
+      this.update();
+      return this._div;
+    };
+
+// method that we will use to update the control based on feature properties passed
+    this.info.update = function (props) {
+      this._div.innerHTML = '<h4>US Population Density</h4>' +  (props ?
+          '<b>' + props.name + '</b><br />' + props.density + ' people / mi<sup>2</sup>'
+          : 'Hover over a state');
+    };
+
+    this.info.addTo(this.map);
+
+
+
+
+
+
+    this.legend.onAdd =  () => {
+
+      var div = window.L.DomUtil.create('div', 'info legend'),
+          grades = [0, 10, 20, 50, 100, 200, 500, 1000];
+
+      // loop through our density intervals and generate a label with a colored square for each interval
+      for (var i = 0; i < grades.length; i++) {
+        div.innerHTML +=
+            '<i style="background:' + this.getColor(grades[i] + 1) + '"></i> ' +
+            grades[i] + (grades[i + 1] ? '&ndash;' + grades[i + 1] + '<br>' : '+');
+      }
+
+      return div;
+    };
+
+    this.legend.addTo(this.map);
   }
 
 }
 </script>
 
-<style scoped>
+<style>
 .fa {
   color: #ffffff;
 }
@@ -166,5 +209,31 @@ h5 {
 .title {
   font-size: 10px;
   font-weight: bold;
+}
+
+
+.info {
+  padding: 6px 8px;
+  font: 14px/16px Arial, Helvetica, sans-serif;
+  background: white;
+  background: rgba(255,255,255,0.8);
+  box-shadow: 0 0 15px rgba(0,0,0,0.2);
+  border-radius: 5px;
+}
+.info h4 {
+  margin: 0 0 5px;
+  color: #777;
+}
+
+.legend {
+  line-height: 18px;
+  color: #555;
+}
+.legend i {
+  width: 18px;
+  height: 18px;
+  float: left;
+  margin-right: 8px;
+  opacity: 0.7;
 }
 </style>
